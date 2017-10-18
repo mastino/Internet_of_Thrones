@@ -1,7 +1,7 @@
 import paho.mqtt.client as paho
 from functools import partial
 
-class MQTTClient:
+class MQTTClient(object):
 
     @staticmethod
     def on_connect(client, userdata, flags, rc):
