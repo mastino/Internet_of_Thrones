@@ -47,7 +47,7 @@ class Control(MQTTClient):
         msg = "pickup:" + car
         self.publish('car', msg)
         self.publish('turnstile', "empty")
-        self.platform -= CAP
+        self.platform -= self.CAP
 
 
 
