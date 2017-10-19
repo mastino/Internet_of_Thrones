@@ -1,4 +1,4 @@
-import atexit
+import atexit, sys
 from mqtt_client import MQTTClient
 
 # create the custom turnstile client
@@ -8,7 +8,12 @@ class Turnstile(MQTTClient):
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
-    	mqtt_client.counter = 0
+        topic = msg.topic.split('/')[-1]
+        payload = msg.payload
+
+        if topic == 'turnstile' and payload == 'empty':
+            print "0 passengers on the platform"
+            mqtt_client.counter = 0
 
     def send_passenger(self):
         self.publish('turnstile', "incoming!")
@@ -21,7 +26,8 @@ def turnstile_cleanup(client):
 # do turnstile stuff
 turnstile = Turnstile()
 atexit.register(turnstile_cleanup, turnstile)
-turnstile.subscribe('cars')
+turnstile.subscribe('turnstile')
+turnstile.subscribe('bcast')
 while True:  # block
     raw_input("press enter for passenger arrival\n")
     if turnstile.counter < 3:
