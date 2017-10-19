@@ -19,18 +19,20 @@ class Control(MQTTClient):
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         print msg.topic, msg.payload
-        if msg.topic == "turnstile" and msg.payload == "incoming!":
-            self.handle_passnger()
+        topic = msg.topic.split("/")[-1]
+        if topic == "turnstile" and msg.payload == "incoming!":
+            mqtt_client.handle_passnger()
 
-        elif msg.topic == "car":
-            m,i = msg.payload.split(":")
-            if m == "available" and self.platform >= self.CAP:
-                self.confirm_car(i)
+        elif topic == "car":
+            m = msg.payload.split(":")[0]
+            if m == "available" and mqtt_client.platform >= mqtt_client.CAP:
+                i = msg.payload.split(":")[1]
+                mqtt_client.confirm_car(i)
 
-        elif msg.topic == "bcast":
+        elif topic == "bcast":
             if msg.payload == "quit":
-                self.disconnect()
-                self.loop_stop()
+                mqtt_client.disconnect()
+                mqtt_client.loop_stop()
 
     def handle_passnger(self):
         self.platform += 1
@@ -47,11 +49,8 @@ class Control(MQTTClient):
         self.publish('turnstile', "empty")
         self.platform -= CAP
 
-        
+
 
 c = Control()
 while(True):
     pass
-
-
-
