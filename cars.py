@@ -16,28 +16,29 @@ class Car(MQTTClient):
         self.ledNum = number+2
         self.name = "car" + str(number)
         super(Car,self).__init__()
-        self.subscribe("test")
+        self.subscribe("car")
     def ride(self):
-        self.publish('test',self.name + ' riding')
+        self.publish('car',self.name + ' riding')
         self.isRiding = True
-        #turnOnLed(self)
+        turnOnLed(self)
     def request(self):
-        self.publish('test', self.name + ' requesting')
+        self.publish('car', 'available:'+ self.name)
     def pickUp(self):
-        self.publish('test',self.name + ' pickup')
+        self.publish('car',self.name + ' pickup')
         self.hasPassengers = False
     def dropOff(self):
-       # turnOffLed(self)
-        self.publish('test', self.name + ' dropoff')
+        turnOffLed(self)
+        self.publish('car', self.name + ' dropoff')
         self.hasPassengers = False
         self.isRiding = False
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         message = msg.payload
-        if message == 'Platform is full':
+        message = message.split(":")
+        if message[0] == 'request':
             if mqtt_client.hasPassengers == False:
                 mqtt_client.request()
-        elif message == mqtt_client.name:
+        elif message[1] == mqtt_client.name:
             mqtt_client.pickUp()
             mqtt_client.ride()
             myThread = Thread(target=timeFunc, args=(mqtt_client,4))
@@ -55,18 +56,18 @@ def createCars(num):
     for i in range(num):
         cars.append(Car(i))
     return cars
-"""
+
 def turnOnLed(car):
     led = mraa.Gpio(car.ledNum)
     led.dir(mraa.DIR_OUT)
     led.write(0)
-"""
-"""
+
+
 def turnOffLed(car):
     led = mraa.Gpio(car.ledNum)
     led.dir(mraa.DIR_OUT)
     led.write(1)
-"""
+
 #mqtt_.subscribe('control')
 #on message 'ready for pick up' send request if not full or riding
 #if recieves a message allowed to pick up, pick up and begin riding
