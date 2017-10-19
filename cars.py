@@ -1,4 +1,4 @@
-#import mraa, time, sys
+import mraa, time, sys
 import sys
 import paho.mqtt.client as paho
 from mqtt_client import MQTTClient
@@ -25,7 +25,7 @@ class Car(MQTTClient):
         self.publish('car', 'available:'+ self.name)
     def pickUp(self):
         self.publish('car',self.name + ' pickup')
-        self.hasPassengers = False
+        self.hasPassengers = True
     def dropOff(self):
         turnOffLed(self)
         self.publish('car', self.name + ' dropoff')
@@ -38,7 +38,7 @@ class Car(MQTTClient):
         if message[0] == 'request':
             if mqtt_client.hasPassengers == False:
                 mqtt_client.request()
-        elif message[1] == mqtt_client.name:
+        elif message[0]=='pickup' and message[1] == mqtt_client.name:
             mqtt_client.pickUp()
             mqtt_client.ride()
             myThread = Thread(target=timeFunc, args=(mqtt_client,4))
