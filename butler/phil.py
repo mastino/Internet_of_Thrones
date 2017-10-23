@@ -7,36 +7,59 @@ class Philosopher(MQTTClient):
         super(Philosopher, self).__init__()
         self.name = str(name)
         self.standing = True
-        self.eating = False
         self.left_fork = f1
         self.right_fork = f2
         self.has_left_fork = False
         self.has_right_fork = False
-        self.subscribe('butler')
+        self.subscribe('phil_' + self.name)
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         topic = msg.topic.split('/')[-1]
-        payload = msg.payload
-
-        print topic
+        msg_parts = msg.payload.split(':')
+        action, id_option = msg_parts[0], msg_parts[1:]
+        if action == 'get':
+            mqtt_client.pickup_fork(id_option[0])
+        elif action == 'put':
+            mqtt_client.putdown_fork(id_option[0])
+        elif action == 'sit':
+            mqtt_client.standing = False
+        elif action == 'arise':
+            mqtt_client.standing = True
+        return
 
     def get_left_fork(self):
-        self.publish('fork_' + left_fork, 'get')
+        self.publish('fork_' + self.left_fork, 'get:' + self.name)
 
     def get_right_fork(self):
-        self.publish('fork_' + right_fork, 'get')
+        self.publish('fork_' + self.right_fork, 'get:' + self.name)
 
     def put_left_fork(self):
-        self.publish('fork_' + left_fork, 'put')
-        self.has_left_fork = False
+        self.publish('fork_' + self.left_fork, 'put:' + self.name)
 
     def put_right_fork(self):
-        self.publish('fork_' + right_fork, 'put')
-        self.has_right_fork = False
+        self.publish('fork_' + self.right_fork, 'put:' + self.name)
 
     def eating(self):
-        self.publish
+        self.publish('butler', 'eating:' + self.name)
+
+    def attempt_to_sit(self):
+        self.publish('butler', 'sit:' + self.name)
+
+    def attempt_to_arise(self):
+        self.publish('butler', 'arise:' + self.name)
+
+    def pickup_fork(self, fork_id):
+        if fork_id == self.left_fork:
+            self.has_left_fork = True
+        elif fork_id == self.right_fork:
+            self.has_right_fork = True
+
+    def putdown_fork(self, fork_id):
+        if fork_id == self.left_fork:
+            self.has_left_fork = False
+        elif fork_id == self.right_fork:
+            self.has_right_fork = False
 
 # at exit function
 def cleanup(client):
@@ -54,35 +77,43 @@ def print_menu(phil_list):
 def handle_action(philosopher, action):
     if action == 'sit':
         if not philosopher.standing:
-            print "That philosopher can't sit!"
+            print "Philosopher already sitting!"
             return
-        # ask butler if it's possible
-        pass
+        philosopher.attempt_to_sit()
     elif action == 'get_left':
         if philosopher.standing:
             print "Philsopher isn't sitting!"
             return
-        philosopher.get_left_fork()  # needs to handle response from fork in on_message
+        philosopher.get_left_fork()
     elif action == 'get_right':
         if philosopher.standing:
             print "Philsopher isn't sitting!"
             return
-        philosopher.get_right_fork()  # needs to handle response from fork in on_message
+        philosopher.get_right_fork()
     elif action == 'eat':
         if not (philosopher.has_left_fork and philosopher.has_right_fork):
             print "Need forks to eat!"
             return
-        philosopher.publish('butler', "eating:" + self.name)
+        philosopher.eating()
     elif action == 'put_left':
         if not philosopher.has_left_fork:
             print "Philsopher doesn't have left fork!"
             return
         philosopher.put_left_fork()
-    elif action == 'get_right':
+    elif action == 'put_right':
         if not philosopher.has_right_fork:
             print "Philsopher doesn't have right fork!"
             return
         philosopher.put_right_fork()
+    elif action == 'arise':
+        if philosopher.standing:
+            print "Philosopher isn't sitting!"
+            return
+        elif philosopher.has_left_fork or philosopher.has_right_fork:
+            print "Philosopher still has a fork!"
+            return
+        philosopher.attempt_to_arise()
+    return
 
 
 # do philosopher stuff
@@ -95,6 +126,12 @@ for i in range(1, num_phil * 2, 2):
 
 while True:  # block
     print_menu(phil_list)
-    phil, action = raw_input("enter command: ").strip().split()
-    phil = int(phil)
-    handle_action(phil_list[phil], action)
+    try:
+        phil, action = raw_input("enter command: ").strip().split()
+        phil = int(phil)
+        handle_action(phil_list[phil], action)
+    except KeyboardInterrupt:
+        print "\nbye"
+        break
+    except:
+        print "INVALID COMMAND!!"
