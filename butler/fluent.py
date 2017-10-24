@@ -7,55 +7,50 @@ python fluent.py [id]
 
 '''
 
-import atexit, sys
+import atexit, mraa, time, sys
 from mqtt_client import MQTTClient
+from time import sleep
 
 class Fluent(MQTTClient):
 
-    def __init__(self, name, f1, f2):
+    def __init__(self, id_in):
         super(Fluent, self).__init__()
-        self.id
+        self.id     = id_in
+        self.led    = id_in + 2
+        self.fluent = False
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         topic = msg.topic.split('/')[-1]
-        if topic != "butler":
-            topic = topic.split('_')[0]
-            id_   = topic.split('_')[-1]
-
+        if topic == "butler":
             msg_parts = msg.payload.split(':')
             action, id_option = msg_parts[0], msg_parts[1:]
-            if action == 'get':
-                mqtt_client.pickup_fork(id_option[0])
-            elif action == 'put':
-                mqtt_client.putdown_fork(id_option[0])
-            elif action == 'sit':
-                mqtt_client.standing = False
-            elif action == 'arise':
-                mqtt_client.standing = True
+            if id_option == mqtt_client.id
+                if action == 'eating':
+                    mqtt_client.on()
+                elif action == 'arise':
+                    mqtt_client.off()
             return
 
+    def on():
+        self.fluent = True
+        led = mraa.Gpio(car.ledNum)
+        led.dir(mraa.DIR_OUT)
+        led.write(0)
 
-# at exit function
-def cleanup(client):
-    client.disconnect()
-    client.loop_stop()
+    def off():
+        self.fluent = False
+        led = mraa.Gpio(car.ledNum)
+        led.dir(mraa.DIR_OUT)
+        led.write(1)
+        
 
-
-# do philosopher stuff
-num_phil = (len(sys.argv) - 1) / 2
-phil_list = []
-for i in range(1, num_phil * 2, 2):
-    new_phil = Philosopher(i/2, sys.argv[i], sys.argv[i+1])
-    phil_list.append(new_phil)
-    atexit.register(cleanup, new_phil)
+id=int(sys.argv[1])
+f = Fluent(id)
 
 while True:  # block
-    print_menu(phil_list)
     try:
-        phil, action = raw_input("enter command: ").strip().split()
-        phil = int(phil)
-        handle_action(phil_list[phil], action)
+        pass
     except KeyboardInterrupt:
         print "\nbye"
         break
@@ -63,5 +58,3 @@ while True:  # block
         print "INVALID COMMAND!!"
 
 
-
-id=int(sys.argv[1])
