@@ -14,50 +14,65 @@ from time import sleep
 
 class Fluent(MQTTClient):
 
-    def __init__(self, id_in):
+    def __init__(self, id_in, led_enable):
         super(Fluent, self).__init__()
         self.id     = id_in
-        self.led    = id_in + 2
+        self.led    = int(id_in) + 2
+        self.led_en = led_enable
         self.fluent = False
         self.subscribe('#')
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
+        # print msg.topic, msg.payload
         topic = msg.topic.split('/')[-1]
 
         topic_l = topic.split('_')
+        topic = topic_l[0]
+        topic_id = "-1"
         if len(topic_l) > 1:
             topic_id = topic_l[1]
-        topic = topic_l[0]
+
+        # print "tpic id", type(topic_id), topic_id
+        # print "tpic id", type(mqtt_client.id), mqtt_client.id
 
         if topic == "butler":
             msg_parts = msg.payload.split(':')
-            action, id_option = msg_parts[0], msg_parts[1:]
+            action, id_option = msg_parts[0], msg_parts[1]
             if id_option == mqtt_client.id:
-                if action == 'eating':
-                    mqtt_client.on()
-                elif action == 'arise':
+                if action == 'arise':
                     mqtt_client.off()
-            return
+        elif (topic == "phil") and (topic_id == mqtt_client.id):
+            action = msg.payload
+            if action == 'sit':
+                mqtt_client.on()
 
-    def on():
+        return
+
+    def on(self):
         self.fluent = True
-        led = mraa.Gpio(car.ledNum)
-        led.dir(mraa.DIR_OUT)
-        led.write(0)
+        if self.led_en:
+            led = mraa.Gpio(car.ledNum)
+            led.dir(mraa.DIR_OUT)
+            led.write(0)
+        else:
+            print "Fluent ", self.id, " ON"
 
-    def off():
+    def off(self):
         self.fluent = False
-        led = mraa.Gpio(car.ledNum)
-        led.dir(mraa.DIR_OUT)
-        led.write(1)
+        if self.led_en:
+            led = mraa.Gpio(car.ledNum)
+            led.dir(mraa.DIR_OUT)
+            led.write(1)
+        else:
+            print "Fluent ", self.id, " OFF"
         
 
 argc = len(sys.argv)
-print "argc: ", argc
+# print "argc: ", argc
 
 if argc >= 2:
-    id=int(sys.argv[1])
+    id=sys.argv[1]
 else:
     print "\nERROR\n\n"
 
@@ -68,7 +83,7 @@ else:
 
 print "led enabled: ", led_enable
 
-f = Fluent(id)
+f = Fluent(id, led_enable)
 
 while True:  # block
     try:
@@ -76,7 +91,5 @@ while True:  # block
     except KeyboardInterrupt:
         print "\nbye"
         break
-    except:
-        print "INVALID COMMAND!!"
 
 
