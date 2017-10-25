@@ -67,11 +67,8 @@ def cleanup(client):
     client.loop_stop()
 
 # print out the action menu
-def print_menu(phil_list):
-    n = len(phil_list)
-    print "\nThere are {} philosophers: {}".format(n, ', '.join(map(str, range(n))))
-    print "Possible actions: sit, get_left, get_right, eat, put_left, put_right, arise"
-    print "Command format: <philosopher number> <action>"
+def print_menu():
+    print "\nActions: sit, get_left, get_right, eat, put_left, put_right, arise"
 
 # handle philosopher action
 def handle_action(philosopher, action):
@@ -113,23 +110,23 @@ def handle_action(philosopher, action):
             print "Philosopher still has a fork!"
             return
         philosopher.attempt_to_arise()
+    else:
+        raise RuntimeError
     return
 
 
 # do philosopher stuff
-num_phil = (len(sys.argv) - 1) / 2
-phil_list = []
-for i in range(1, num_phil * 2, 2):
-    new_phil = Philosopher(i/2, sys.argv[i], sys.argv[i+1])
-    phil_list.append(new_phil)
-    atexit.register(cleanup, new_phil)
+if len(sys.argv) != 4:
+    print "Usage: python {} <{}> <{}> <{}>".format(sys.argv[0], "phil_id", "left_fork", "right_fork")
+    sys.exit()
+new_phil = Philosopher(sys.argv[1], sys.argv[2], sys.argv[3])
+atexit.register(cleanup, new_phil)
 
 while True:  # block
-    print_menu(phil_list)
+    print_menu()
     try:
-        phil, action = raw_input("enter command: ").strip().split()
-        phil = int(phil)
-        handle_action(phil_list[phil], action)
+        action = raw_input("Enter action: ").strip()
+        handle_action(new_phil, action)
     except KeyboardInterrupt:
         print "\nbye"
         break
