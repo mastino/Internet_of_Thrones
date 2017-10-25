@@ -7,7 +7,8 @@ python fluent.py [id]
 
 '''
 
-import atexit, mraa, time, sys
+import atexit, time, sys
+# import mraa
 from mqtt_client import MQTTClient
 from time import sleep
 
@@ -18,14 +19,21 @@ class Fluent(MQTTClient):
         self.id     = id_in
         self.led    = id_in + 2
         self.fluent = False
+        self.subscribe('#')
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         topic = msg.topic.split('/')[-1]
+
+        topic_l = topic.split('_')
+        if len(topic_l) > 1:
+            topic_id = topic_l[1]
+        topic = topic_l[0]
+
         if topic == "butler":
             msg_parts = msg.payload.split(':')
             action, id_option = msg_parts[0], msg_parts[1:]
-            if id_option == mqtt_client.id
+            if id_option == mqtt_client.id:
                 if action == 'eating':
                     mqtt_client.on()
                 elif action == 'arise':
@@ -45,7 +53,21 @@ class Fluent(MQTTClient):
         led.write(1)
         
 
-id=int(sys.argv[1])
+argc = len(sys.argv)
+print "argc: ", argc
+
+if argc >= 2:
+    id=int(sys.argv[1])
+else:
+    print "\nERROR\n\n"
+
+if argc >= 3:
+    led_enable = sys.argv[2] == "True"
+else:
+    led_enable = True
+
+print "led enabled: ", led_enable
+
 f = Fluent(id)
 
 while True:  # block
