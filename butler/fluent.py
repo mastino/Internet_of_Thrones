@@ -8,7 +8,7 @@ python fluent.py [id]
 '''
 
 import atexit, time, sys
-# import mraa
+import mraa
 from mqtt_client import MQTTClient
 from time import sleep
 
@@ -21,6 +21,8 @@ class Fluent(MQTTClient):
         self.led_en = led_enable
         self.fluent = False
         self.subscribe('#')
+        led = mraa.Gpio(self.led)
+        led.write(1)
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
@@ -52,7 +54,7 @@ class Fluent(MQTTClient):
     def on(self):
         self.fluent = True
         if self.led_en:
-            led = mraa.Gpio(car.ledNum)
+            led = mraa.Gpio(self.led)
             led.dir(mraa.DIR_OUT)
             led.write(0)
         else:
@@ -61,7 +63,7 @@ class Fluent(MQTTClient):
     def off(self):
         self.fluent = False
         if self.led_en:
-            led = mraa.Gpio(car.ledNum)
+            led = mraa.Gpio(self.led)
             led.dir(mraa.DIR_OUT)
             led.write(1)
         else:
