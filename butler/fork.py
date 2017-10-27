@@ -1,5 +1,5 @@
 import sys
-#import mraa
+import mraa
 from mqtt_client import MQTTClient
 
 class Fork(MQTTClient):
@@ -28,29 +28,34 @@ class Fork(MQTTClient):
             if command == 'put':
                  _id = topic.split('_')[1]
                  if _id == mqtt_client.name :
-                     #           turnOffLed(self.led)
+#                     turnOffLed(mqtt_client.led)
                      mqtt_client.putFork(label[0])
                 #turnOffled
     def getFork(self, _id):
         if not self.inUse:
-    #        turnOnLed(self.led)
+            turnOnLed(self.led)
             self.inUse = True
             self.publish('phil_'+ _id, 'get:' + self.name)
 
     def putFork(self, _id):
         if self.inUse:
-            self.inUse = False
+            turnOffLed(self.led)
+	    self.inUse = False
             self.publish('phil_'+ _id, 'put:' +self.name)
 
-#def turnOnLed(num):
-    # led = mraa.Gpio(num)
-    #led.dir(mraa.DIR_OUT)
-    #led.write(0)
+def turnOnLed(num):
+    led = mraa.Gpio(int(num))
+    led.dir(mraa.DIR_OUT)
+    led.write(0)
 
-#def tunrOffLed(num):
- #   led = mraa.Gpio(num)
-  #  led.dir(mraa.DIR_OUT)
-   # led.write(1)
+def turnOffLed(num):
+    led = mraa.Gpio(int(num))
+    led.dir(mraa.DIR_OUT)
+    led.write(1)
+for x in range(7):
+    led = mraa.Gpio(x)
+    led.dir(mraa.DIR_OUT)
+    led.write(1)
 Fork(sys.argv[1], sys.argv[2])
 while True:
     pass 
