@@ -1,0 +1,19 @@
+<html>
+<head>
+  <title>mqtt monitor</title>
+</head>
+<body>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script>
+    function update_values() {
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+            $.getJSON($SCRIPT_ROOT+"/_msgs",
+                function(data) {
+                    $("#data").append($("<p></p>").text(data.msgs))
+                });
+    }
+    setInterval(update_values, 1000);
+    </script>
+    <div id="data"></div>
+</body>
+</html>
