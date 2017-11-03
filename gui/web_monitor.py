@@ -41,11 +41,11 @@ class Monitor(MQTTClient):
                 self.phil0_arise = True
             elif action == 'sitdown' and phil_id == '0':
                 self.phil0_sitdown = True
-            elif action == 'arise' and phil_id == '1' and not phil0_sitdown:
+            elif action == 'arise' and phil_id == '1' and not self.phil0_sitdown:
                 temp = copy.copy(last_ten_messages)
                 while not temp.empty():
                     property2_dump.append(temp.get())
-                
+
 
 def monitor_cleanup(client):
     client.disconnect()
