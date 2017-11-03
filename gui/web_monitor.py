@@ -11,6 +11,7 @@ app.logger.setLevel(logging.DEBUG)
 waiting_to_display = []
 last_ten_messages = Queue.Queue()
 property1_dump = []
+property2_dump = []
 
 def add_to_last_ten(msg):
     global last_ten_messages
@@ -40,8 +41,11 @@ class Monitor(MQTTClient):
                 self.phil0_arise = True
             elif action == 'sitdown' and phil_id == '0':
                 self.phil0_sitdown = True
-            elif action == 'arise' and phil_id == '1':
-                // TODO
+            elif action == 'arise' and phil_id == '1' and not phil0_sitdown:
+                temp = copy.copy(last_ten_messages)
+                while not temp.empty():
+                    property2_dump.append(temp.get())
+                
 
 def monitor_cleanup(client):
     client.disconnect()
@@ -55,9 +59,13 @@ def index():
 def msgs():
     global waiting_to_display
     global property1_dump
+    global property2_dump
     if property1_dump:
         res = jsonify(msgs=waiting_to_display, property1=property1_dump)
         property1_dump = []
+    elif property2_dump:
+        res = jsonify(msg=waiting_to_display, property2=property2_dump)
+        property2_dump = []
     else:
         res = jsonify(msgs=waiting_to_display)
     waiting_to_display = []
