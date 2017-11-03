@@ -20,7 +20,8 @@ def add_to_last_ten(msg):
 
 class Monitor(MQTTClient):
 
-    phil0_arise = False
+    phil0_arise   = False
+    phil0_sitdown = False
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
@@ -37,6 +38,8 @@ class Monitor(MQTTClient):
                     property1_dump.append(temp.get())
             elif action == 'arise' and phil_id == '0':
                 self.phil0_arise = True
+            elif action == 'sitdown' and phil_id == '0':
+                self.phil0_sitdown = True
 
 def monitor_cleanup(client):
     client.disconnect()
