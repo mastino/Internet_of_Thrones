@@ -23,6 +23,7 @@ class Monitor(MQTTClient):
 
     phil0_arise   = False
     phil0_sitdown = False
+    phil1_arise   = False
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
@@ -41,10 +42,17 @@ class Monitor(MQTTClient):
                 self.phil0_arise = True
             elif action == 'sitdown' and phil_id == '0':
                 self.phil0_sitdown = True
+            elif action == 'arise' and phil_id == '1' and self.phil0_sitdown:
+                phil1_arise = True
             elif action == 'arise' and phil_id == '1' and not self.phil0_sitdown:
                 temp = copy.copy(last_ten_messages)
                 while not temp.empty():
                     property2_dump.append(temp.get())
+            elif action == 'sitdown' and phil_id == '0' and not self.phil1_arise:
+                temp = copy.copy(last_ten_messages)
+                while not temp.empty():
+                    property2_dump.append(temp.get())
+            
 
 
 def monitor_cleanup(client):
