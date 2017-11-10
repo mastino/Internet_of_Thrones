@@ -29,6 +29,16 @@
                             $("#property1").append($("<p></p>").text(m));
                         });
                     }
+                    if(data.property2){
+                        $("#property2").css('color', '#d9534f');
+                        $("#property2").empty();
+                        $("#property2").append($("<p></p>").text("VIOLATION! TRACE:"));
+                        console.log(data.property2);
+                        (data.property2).forEach(function(m) {
+                            $("#property2").append($("<p></p>").text(m));
+                        });
+                    }
+    
                 });
     }
     setInterval(update_values, 1000);
