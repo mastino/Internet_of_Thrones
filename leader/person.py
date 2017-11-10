@@ -3,21 +3,21 @@ from mqtt_client import MQTTClient
 
 class Person(MQTTClient):
 
-    def __init__(self, max_sitting):
+    def __init__(self, own_id, next_id):
         super(Person, self).__init__()
-        self.id = int(max_sitting)
-        self.currently_sitting = set([])
-        self.subscribe('butler')
+        self.own_id = int(own_id)
+        self.next_id = int(next_id)
+        self.subscribe('cmd')
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         topic = msg.topic.split('/')[-1]
         msg_parts = msg.payload.split(':')
-        
+
         if topic == 'cmd':
             msg_parts = msg.payload.split(':')
             action, nid, lid = msg_parts[0], msg_parts[1], msg_parts[1]
-            if mqtt_client.id == nid:
+            if mqtt_client.own_id == nid:
                 mqtt_client.process_cmd(action, lid)
 
         else: ## topic == log
@@ -27,16 +27,23 @@ class Person(MQTTClient):
 
     def process_cmd(self, action, lid):
         if action == 'election':
-            pass
+            if   self.own_id >  lid:
+                self.publish("cmd", "election:" + str(nid) + ":" + str(self.own_id))
+            elif self.own_id <  lid:
+                self.publish("cmd", "election:" + str(nid) + ":" + str(lid))
+            elif self.own_id == lid:
+                self.publish("cmd", "announce:" + str(nid) + ":" + str(self.own_id))
+
         elif action == 'announce':
-            pass
+            if self.own_id == lid:
+                self.publish("log", "all informed")
+            else:
+                self.publish("cmd", "announce:" + str(nid) + ":" + str(lid))
+
+            self.publish("log", str(self.own_id) + " doing real work")
+
         return
 
-    def send_arise(self, phil_id):
-        if phil_id in self.currently_sitting:
-            self.currently_sitting.remove(phil_id)
-            self.publish('phil_' + phil_id, 'arise')
-        return
 
 # at exit function
 def cleanup(client):
@@ -44,7 +51,7 @@ def cleanup(client):
     client.loop_stop()
 
 # do butler stuff
-person = Person(sys.argv[1])
+person = Person(sys.argv[1], sys.argv[2])
 atexit.register(cleanup, person)
 while True:  # block
     pass
