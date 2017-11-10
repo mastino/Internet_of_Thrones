@@ -1,11 +1,11 @@
 import atexit, sys
 from mqtt_client import MQTTClient
 
-class Butler(MQTTClient):
+class Person(MQTTClient):
 
     def __init__(self, max_sitting):
-        super(Butler, self).__init__()
-        self.max_sitting = int(max_sitting)
+        super(Person, self).__init__()
+        self.id = int(max_sitting)
         self.currently_sitting = set([])
         self.subscribe('butler')
 
@@ -13,17 +13,23 @@ class Butler(MQTTClient):
     def on_message(client, userdata, msg, mqtt_client):
         topic = msg.topic.split('/')[-1]
         msg_parts = msg.payload.split(':')
-        action, id_option = msg_parts[0], msg_parts[1:]
-        if action == 'sit':
-            mqtt_client.send_sit(id_option[0])
-        elif action == 'arise':
-            mqtt_client.send_arise(id_option[0])
+        
+        if topic == 'cmd':
+            msg_parts = msg.payload.split(':')
+            action, nid, lid = msg_parts[0], msg_parts[1], msg_parts[1]
+            if mqtt_client.id == nid:
+                mqtt_client.process_cmd(action, lid)
+
+        else: ## topic == log
+            msg = msg.payload
+
         return
 
-    def send_sit(self, phil_id):
-        if len(self.currently_sitting) < self.max_sitting:
-            self.currently_sitting.add(phil_id)
-            self.publish('phil_' + phil_id, 'sit')
+    def process_cmd(self, action, lid):
+        if action == 'election':
+            pass
+        elif action == 'announce':
+            pass
         return
 
     def send_arise(self, phil_id):
@@ -38,7 +44,7 @@ def cleanup(client):
     client.loop_stop()
 
 # do butler stuff
-butler = Butler(sys.argv[1])
-atexit.register(cleanup, butler)
+person = Person(sys.argv[1])
+atexit.register(cleanup, person)
 while True:  # block
     pass
