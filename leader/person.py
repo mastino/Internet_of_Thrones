@@ -16,7 +16,7 @@ class Person(MQTTClient):
 
         if topic == 'cmd':
             msg_parts = msg.payload.split(':')
-            action, nid, lid = msg_parts[0], msg_parts[1], msg_parts[1]
+            action, nid, lid = msg_parts[0], int(msg_parts[1]), int(msg_parts[2])
             if mqtt_client.own_id == nid:
                 mqtt_client.process_cmd(action, lid)
 
@@ -28,17 +28,17 @@ class Person(MQTTClient):
     def process_cmd(self, action, lid):
         if action == 'election':
             if   self.own_id >  lid:
-                self.publish("cmd", "election:" + str(nid) + ":" + str(self.own_id))
+                self.publish("cmd", "election:" + str(self.next_id) + ":" + str(self.own_id))
             elif self.own_id <  lid:
-                self.publish("cmd", "election:" + str(nid) + ":" + str(lid))
+                self.publish("cmd", "election:" + str(self.next_id) + ":" + str(lid))
             elif self.own_id == lid:
-                self.publish("cmd", "announce:" + str(nid) + ":" + str(self.own_id))
+                self.publish("cmd", "announce:" + str(self.next_id) + ":" + str(self.own_id))
 
         elif action == 'announce':
             if self.own_id == lid:
                 self.publish("log", "all informed")
             else:
-                self.publish("cmd", "announce:" + str(nid) + ":" + str(lid))
+                self.publish("cmd", "announce:" + str(self.next_id) + ":" + str(lid))
 
             self.publish("log", str(self.own_id) + " doing real work")
 
