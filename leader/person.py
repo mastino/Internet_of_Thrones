@@ -1,13 +1,33 @@
-import atexit, sys
+# use python person.py [ID] [NID] <Initiate> <LED>
+# ex  python person.py 0 1 False
+# to specify LED you must specify initiate
+#    both default to false
+
+import atexit, sys, time
+#import mraa
 from mqtt_client import MQTTClient
 
 class Person(MQTTClient):
 
-    def __init__(self, own_id, next_id):
+    def __init__(self, own_id, next_id, init, led_enable):
         super(Person, self).__init__()
         self.own_id = int(own_id)
         self.next_id = int(next_id)
         self.subscribe('cmd')
+        self.led_en = led_enable
+        if self.led_en:
+            self.led1 = mraa.Gpio(2)
+            self.led2 = mraa.Gpio(3)
+            self.led3 = mraa.Gpio(4)
+        self.in_contention()
+
+        if init:
+            print "yo"
+            self.publish("cmd", "election:" + str(self.next_id) + ":" + str(self.own_id))
+            self.id_sent = True
+        else:
+            self.id_sent = False
+
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
@@ -27,11 +47,14 @@ class Person(MQTTClient):
 
     def process_cmd(self, action, lid):
         if action == 'election':
-            if   self.own_id >  lid:
+            if   (self.own_id >  lid) and not self.id_sent:
                 self.publish("cmd", "election:" + str(self.next_id) + ":" + str(self.own_id))
+                self.id_sent = True
             elif self.own_id <  lid:
+                self.out_of_contention()
                 self.publish("cmd", "election:" + str(self.next_id) + ":" + str(lid))
             elif self.own_id == lid:
+                self.leader()
                 self.publish("cmd", "announce:" + str(self.next_id) + ":" + str(self.own_id))
 
         elif action == 'announce':
@@ -44,6 +67,45 @@ class Person(MQTTClient):
 
         return
 
+    def in_contention(self):
+        if self.led_en:
+            self.led1.dir(mraa.DIR_OUT)
+            self.led1.write(0)
+            self.led2.dir(mraa.DIR_OUT)
+            self.led2.write(0)
+            self.led3.dir(mraa.DIR_OUT)
+            self.led3.write(1)
+        else:
+            print "Person ", self.own_id, " in contention"
+
+        return
+
+    def out_of_contention(self):
+        if self.led_en:
+            self.led1.dir(mraa.DIR_OUT)
+            self.led1.write(0)
+            self.led2.dir(mraa.DIR_OUT)
+            self.led2.write(1)
+            self.led3.dir(mraa.DIR_OUT)
+            self.led3.write(1)
+        else:
+            print "Person ", self.own_id, " out of contention"
+
+        return
+
+    def leader(self):
+        if self.led_en:
+            self.led1.dir(mraa.DIR_OUT)
+            self.led1.write(0)
+            self.led2.dir(mraa.DIR_OUT)
+            self.led2.write(0)
+            self.led3.dir(mraa.DIR_OUT)
+            self.led3.write(0)
+        else:
+            print "Person ", self.own_id, " declared leader"
+
+        return
+
 
 # at exit function
 def cleanup(client):
@@ -51,7 +113,15 @@ def cleanup(client):
     client.loop_stop()
 
 # do butler stuff
-person = Person(sys.argv[1], sys.argv[2])
+init = False
+if len(sys.argv) >= 4:
+    init = sys.argv[3] == "True"
+
+led_enable = False
+if len(sys.argv) >= 5:
+    led_enable = sys.argv[4] == "True"
+
+person = Person(sys.argv[1], sys.argv[2], init, led_enable)
 atexit.register(cleanup, person)
 while True:  # block
     pass
