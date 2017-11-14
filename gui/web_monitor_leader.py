@@ -20,10 +20,12 @@ def add_to_last_ten(msg):
     last_ten_messages.put(msg)
 
 class Monitor(MQTTClient):
-
-    phil0_arise   = False
-    phil0_sitdown = False
-    phil1_arise   = True
+    # did everyone vote in the election
+    # does everyone announce the same leader
+    # if announce happened reset these vars
+    num_vote = 0
+    who_dat_leader = "idk"
+    announce = False
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
@@ -33,32 +35,29 @@ class Monitor(MQTTClient):
         mqtt_client.assert2(msg.topic.split('/')[-1], msg.payload)
 
     def assert1(self, topic, msg):
-        if topic == 'butler':
-            action, phil_id = msg.split(':')
-            if action == 'eating' and phil_id == '0' and not self.phil0_arise:
+        if topic == 'election':
+            if announce:
+                self.num_vote = 0
+                self.who_dat_leader = "idk"
+                self.announce = False
+            NID, LID = msg.split(':')
+            if LID < NID:
                 temp = copy.copy(last_ten_messages)
                 while not temp.empty():
                     property1_dump.append(temp.get())
-            elif action == 'arise' and phil_id == '0':
-                self.phil0_arise = True
+            else:
+                self.num_vote += 1
+                self.who_dat_leader = LID
 
     def assert2(self, topic, msg):
-        if topic == 'butler':
-            action, phil_id = msg.split(':')
-            if action == 'sit' and phil_id == '0' and not self.phil0_sitdown:
-                self.phil1_arise = False
-                self.phil0_sitdown = True
-            elif action == 'arise' and phil_id == '1' and self.phil0_sitdown:
-                self.phil1_arise = True
-                self.phil0_sitdown = False
-            elif action == 'arise' and phil_id == '1' and not self.phil0_sitdown:
+        if topic == 'announce':
+            NID, LID = msg.split(':')
+            if not self.num_vote == 3 or not self.who_dat_leader == LID:
                 temp = copy.copy(last_ten_messages)
                 while not temp.empty():
                     property2_dump.append(temp.get())
-            elif action == 'sit' and phil_id == '0' and not self.phil1_arise:
-                temp = copy.copy(last_ten_messages)
-                while not temp.empty():
-                    property2_dump.append(temp.get())
+            else:
+                self.announce = True
 
 def monitor_cleanup(client):
     client.disconnect()
