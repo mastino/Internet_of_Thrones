@@ -19,7 +19,11 @@
             $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
             $.getJSON($SCRIPT_ROOT+"/_msgs",
                 function(data) {
-                    $("#data").append($("<p></p>").text(data.msgs));
+                    if(data.msgs){
+                        (data.msgs).forEach(function(m) {
+                            $("#data").append($("<p></p>").text(m));
+                        });
+                    }
                     if(data.property1){
                         $("#property1").css('color', '#d9534f');
                         $("#property1").empty();
@@ -38,7 +42,7 @@
                             $("#property2").append($("<p></p>").text(m));
                         });
                     }
-    
+
                 });
     }
     setInterval(update_values, 1000);
@@ -46,11 +50,11 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6" style="border-right:1px solid #dddddd;">
-                <h5 style="text-align:center;">assert TESTING = (!phil[0].eat W phil[0].arise)</h3>
+                <h5 style="text-align:center;">assert: each node passes valid leader ID</h3>
                 <span id="property1" style="color:#5cb85c">OK</span>
             </div>
             <div class="col-md-6">
-                <h5 style="text-align:center;">property TESTING2 = (phil[0].sitdown->phil[1].arise->TESTING2)</h3>
+                <h5 style="text-align:center;">assert: no node announces early</h3>
                 <span id="property2" style="color:#5cb85c">OK</span>
             </div>
         </div> <!-- row -->

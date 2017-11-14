@@ -49,10 +49,12 @@ class Person(MQTTClient):
         if action == 'election':
             if   (self.own_id >  lid) and not self.id_sent:
                 self.publish("cmd", "election:" + str(self.next_id) + ":" + str(self.own_id))
+                self.publish("log", "passing:" + str(self.own_id) + ":" + str(self.own_id))
                 self.id_sent = True
             elif self.own_id <  lid:
                 self.out_of_contention()
                 self.publish("cmd", "election:" + str(self.next_id) + ":" + str(lid))
+                self.publish("log", "passing:" + str(self.own_id) + ":" + str(lid))
             elif self.own_id == lid:
                 self.leader()
                 self.publish("cmd", "announce:" + str(self.next_id) + ":" + str(self.own_id))
