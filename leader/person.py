@@ -1,11 +1,11 @@
-# use python person.py [ID] [NID] <Initiate> <LED>
+# use python person.py [ID] [NID] <Initiate> <LED>
 # ex  python person.py 0 1 False
 # to specify LED you must specify initiate
 #    both default to false
 
 import atexit, sys, time
-import mraa
-from mqtt_client import MQTTClient
+#import mraa
+from mqtt_client import MQTTClient
 
 class Person(MQTTClient):
 
@@ -33,19 +33,18 @@ class Person(MQTTClient):
     def on_message(client, userdata, msg, mqtt_client):
         topic = msg.topic.split('/')[-1]
         msg_parts = msg.payload.split(':')
-
         if topic == 'cmd':
             msg_parts = msg.payload.split(':')
             action, nid, lid = msg_parts[0], int(msg_parts[1]), int(msg_parts[2])
             if mqtt_client.own_id == nid:
-                mqtt_client.process_cmd(action, lid)
+                mqtt_client.process_cmd(action, lid)
 
         else: ## topic == log
             msg = msg.payload
 
         return
-
-    def process_cmd(self, action, lid):
+
+    def process_cmd(self, action, lid):
         if action == 'election':
             if   (self.own_id >  lid) and not self.id_sent:
                 self.publish("cmd", "election:" + str(self.next_id) + ":" + str(self.own_id))
@@ -66,13 +65,13 @@ class Person(MQTTClient):
                 self.publish("cmd", "announce:" + str(self.next_id) + ":" + str(lid))
 
             self.publish("log", str(self.own_id) + " doing real work")
-
+
         return
 
     def in_contention(self):
         if self.led_en:
             self.led1.dir(mraa.DIR_OUT)
-            self.led1.write(0)
+            self.led1.write(0)
             self.led2.dir(mraa.DIR_OUT)
             self.led2.write(0)
             self.led3.dir(mraa.DIR_OUT)
@@ -82,10 +81,10 @@ class Person(MQTTClient):
 
         return
 
-    def out_of_contention(self):
+    def out_of_contention(self):
         if self.led_en:
             self.led1.dir(mraa.DIR_OUT)
-            self.led1.write(0)
+            self.led1.write(0)
             self.led2.dir(mraa.DIR_OUT)
             self.led2.write(1)
             self.led3.dir(mraa.DIR_OUT)
@@ -95,7 +94,7 @@ class Person(MQTTClient):
 
         return
 
-    def leader(self):
+    def leader(self):
         if self.led_en:
             self.led1.dir(mraa.DIR_OUT)
             self.led1.write(0)
@@ -105,7 +104,7 @@ class Person(MQTTClient):
             self.led3.write(0)
         else:
             print "Person ", self.own_id, " declared leader"
-
+
         return
 
 
@@ -126,4 +125,4 @@ if len(sys.argv) >= 5:
 person = Person(sys.argv[1], sys.argv[2], init, led_enable)
 atexit.register(cleanup, person)
 while True:  # block
-    pass
+    pass
