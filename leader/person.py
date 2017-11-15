@@ -4,7 +4,7 @@
 #    both default to false
 
 import atexit, sys, time
-#import mraa
+import mraa
 from mqtt_client import MQTTClient
 
 class Person(MQTTClient):
@@ -16,9 +16,9 @@ class Person(MQTTClient):
         self.subscribe('cmd')
         self.led_en = led_enable
         if self.led_en:
-            self.led1 = mraa.Gpio(3)
-            self.led2 = mraa.Gpio(4)
-            self.led3 = mraa.Gpio(5)
+            self.led1 = mraa.Gpio(6)
+            self.led2 = mraa.Gpio(7)
+            self.led3 = mraa.Gpio(8)
         self.in_contention()
 
         if init:
