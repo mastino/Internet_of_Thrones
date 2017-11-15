@@ -37,7 +37,7 @@ class Monitor(MQTTClient):
         mqtt_client.assert2(msg.topic.split('/')[-1], msg.payload)
 
     def assert1(self, topic, msg):
-        if topic == 'log':
+        if topic == 'log' and msg.split(':')[0] == 'passing':
             action, OID, LID = msg.split(':')
             if action == 'passing':
                 if self.announce:
@@ -57,6 +57,8 @@ class Monitor(MQTTClient):
             action, NID, LID = msg.split(':')
             if action == 'announce':
                 if (not self.num_vote == 3) or (not self.who_dat_leader == LID):
+                    print self.num_vote
+                    print self.who_dat_leader
                     temp = copy.copy(last_ten_messages)
                     while not temp.empty():
                         property2_dump.append(temp.get())
