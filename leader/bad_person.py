@@ -22,26 +22,28 @@ class Person(MQTTClient):
         self.in_contention()
 
         if init:
-            print "yo"
+            print "bad node"
             self.publish("cmd", "election:" + str(self.next_id) + ":" + str(self.own_id))
             self.publish("log", "passing:" + str(self.next_id) + ":" + str(self.own_id))
             self.id_sent = True
+            self.publish("cmd", "announce:" + str(self.next_id) + ":" + str(self.own_id))
+            self.publish("log", str(self.own_id) + " doing real work")
         else:
             self.id_sent = False
 
 
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
-        topic = msg.topic.split('/')[-1]
-        msg_parts = msg.payload.split(':')
-        if topic == 'cmd':
-            msg_parts = msg.payload.split(':')
-            action, nid, lid = msg_parts[0], int(msg_parts[1]), int(msg_parts[2])
-            if mqtt_client.own_id == nid:
-                mqtt_client.process_cmd(action, lid)
-
-        else: ## topic == log
-            msg = msg.payload
+        # topic = msg.topic.split('/')[-1]
+        # msg_parts = msg.payload.split(':')
+        # if topic == 'cmd':
+        #     msg_parts = msg.payload.split(':')
+        #     action, nid, lid = msg_parts[0], int(msg_parts[1]), int(msg_parts[2])
+        #     if mqtt_client.own_id == nid:
+        #         mqtt_client.process_cmd(action, lid)
+        #
+        # else: ## topic == log
+        #     msg = msg.payload
 
         return
 
