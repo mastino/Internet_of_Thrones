@@ -1,5 +1,19 @@
 import atexit
 from mqtt_client import MQTTClient
+class Instruction(MQTTClient):
+    def __init__(self):
+        super(Instruction,self).__init__()
+        self.subscribe("move")
+    @staticmethod
+    def on_message(client, userdata, msg, mqtt_client):
+        topic = msg.topic.split('/')[-1]
+        msg_parts = msg.payload.split(':')
+        if topic == 'move':
+            msg_parts = msg.payload.split(':')
+            car, spot = msg_parts[0], msg_parts[1]
+            print("move " + car +" to spot " + spot)
+            raw_input("Press enter to continue")
+        return
 
 # at exit function
 def cleanup(client):
@@ -7,9 +21,9 @@ def cleanup(client):
     client.loop_stop()
 
 # do turnstile stuff
-tester = MQTTClient()
-atexit.register(cleanup, tester)
+test = Instruction()
+atexit.register(cleanup, test)
+
+
 while True:  # block
-    topic = (raw_input("enter topic name:\n")).strip()
-    msg = (raw_input("enter message:\n")).strip()
-    tester.publish(topic, msg)
+    pass

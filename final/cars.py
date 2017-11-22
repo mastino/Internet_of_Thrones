@@ -5,9 +5,7 @@ from mqtt_client import MQTTClient
 from threading import Thread
 from time import sleep
 
-N=int(sys.argv[1])
-if N > 7:
-    quit
+# if you remove something from a hashtable in java it doesnt remove it from memory
 
 # initialize 
 # each car takes in an ID PATH
@@ -15,28 +13,22 @@ if N > 7:
 # hilist -> permission with priority before them (higher id) paths conflict (need to hear back from)
 # if no conflict with path give permission
 # lowlist -> once done driving send permissions
+# hi list empty enter into conflict zone
+# exit conflict zone send permissions to lowlist
+# in conflict zone keep track of square and goal and then be able recieve messages
+# that tell it when to move 
+#car needs a next step method
 class Car(MQTTClient):
-    def __init__(self, number):
-        self.isRiding = False
-        self.hasPassengers = False
-        self.ledNum = number+2
+    def __init__(self, number, path, currPos):
+        self.hiList = []
+        self.lowList = False
+        self.id = number
         self.name = "car" + str(number)
+        self.goal = path
+        self.currentPosition = currPos
         super(Car,self).__init__()
         self.subscribe("car")
-    def ride(self):
-        self.publish('car',self.name + ' riding')
-        self.isRiding = True
-        turnOnLed(self)
-    def request(self):
-        self.publish('car', 'available:'+ self.name)
-    def pickUp(self):
-        self.publish('car',self.name + ' pickup')
-        self.hasPassengers = True
-    def dropOff(self):
-        turnOffLed(self)
-        self.publish('car', self.name + ' dropoff')
-        self.hasPassengers = False
-        self.isRiding = False
+    
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         message = msg.payload
@@ -63,25 +55,6 @@ def createCars(num):
         cars.append(Car(i))
     return cars
 
-def turnOnLed(car):
-    led = mraa.Gpio(car.ledNum)
-    led.dir(mraa.DIR_OUT)
-    led.write(0)
-
-
-def turnOffLed(car):
-    led = mraa.Gpio(car.ledNum)
-    led.dir(mraa.DIR_OUT)
-    led.write(1)
-
-#mqtt_.subscribe('control')
-#on message 'ready for pick up' send request if not full or riding
-#if recieves a message allowed to pick up, pick up and begin riding
-#after some time drop off passengers
-
-cars = createCars(N)
-#for car in cars:
- #   turnOnLed(car)
 while True:
     pass 
 
