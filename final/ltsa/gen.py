@@ -18,7 +18,7 @@ lower_priority = \
 {3}receive_permission[{0}][ID] -> WAIT_RESPONSE{2}[ll2][ll3][ll4][l] |
 """
 
-low_list = ["", "[{}][hl3][hl4]","[h12][{}][hl4]","[h12][hl3][{}]"]
+low_list = ["", "[{}][hl3][hl4]","[hl2][{}][hl4]","[hl2][hl3][{}]"]
 
 for i in range(1,MAX_CARS):
     file.write("\n")
@@ -42,11 +42,11 @@ file.write("\n")
 file.write("when(!hl2 && !hl3 && !hl4) enter[ID] -> CRITICAL[ll2][ll3][ll4][l] |  // not waiting for anyone\n")
 
 lower_priority = \
-"""{2} receive_permission[{0}][ID] -> WAIT_PERMISSION{1}[ll3][ll4][l] |
+"""{2} receive_permission[{0}][ID] -> WAIT_PERMISSION{1}[ll2][ll3][ll4][l] |
 """
 
-low_list  = ["", "[{}][hl3][hl4]","[h12][{}][hl4]","[h12][hl3][{}]"]
-low_list2 = ["", "[{}][ll3][ll4]","[l12][{}][ll4]","[l12][ll3][{}]"]
+low_list  = ["", "[{}][hl3][hl4]","[hl2][{}][hl4]","[hl2][hl3][{}]"]
+low_list2 = ["", "[{}][ll3][ll4]","[ll2][{}][ll4]","[ll2][ll3][{}]"] 
 when_lst = ["", "hl2", "hl3", "hl4"]
 
 
@@ -62,10 +62,10 @@ for i in range(1,MAX_CARS):
 lower_priority = \
 '''{2} receive_request[{0}][ID][Lanes] -> WAIT_PERMISSION[hl2][hl3][hl4]{1} |
 '''
-for i in range(1,MAX_CARS):
+for i in range(1,MAX_CARS+1):
     file.write("\n")
     cnt = 1
-    when_str = "when (ID != {}) ".format(i)
+    when_str = "when (ID == {}) ".format(i)
     for j in range(1,MAX_CARS+1):
         if i != j:
             file.write(lower_priority.format(j, low_list2[cnt].format("True"),  when_str))
@@ -83,7 +83,7 @@ lower_priority = \
 """{2} receive_request[{0}][ID][Lanes] -> CRITICAL{1}[l] |
 """
 
-low_list2 = ["", "[{}][ll3][ll4]","[l12][{}][ll4]","[l12][ll3][{}]"]
+low_list2 = ["", "[{}][ll3][ll4]","[ll2][{}][ll4]","[ll2][ll3][{}]"]
 
 for i in range(1,MAX_CARS):
     file.write("\n")
@@ -112,7 +112,7 @@ lower_priority = \
 """{2} send_permission[ID][{0}] -> CLEANUP{1}[l] |
 """
 
-low_list2 = ["", "[{}][ll3][ll4]","[l12][{}][ll4]","[l12][ll3][{}]"]
+low_list2 = ["", "[{}][ll3][ll4]","[ll2][{}][ll4]","[ll2][ll3][{}]"]
 when_lst = ["", "ll2", "ll3", "ll4"]
 
 for i in range(1,MAX_CARS):
