@@ -14,17 +14,17 @@ from mapInit import carMap, colMap, pathCol
 # that tell it when to move 
 #car needs a next step method
 class Car(MQTTClient):
-    allCars = []
+    allCars = ["0","1","2","3"]
     def __init__(self, number, goal, currPos):
-        self.hiList = []
+        self.hiList = allCars[:]
         self.lowList = []
         self.id = number
+        self.hiList = self.hiList.remove(self.id)
         self.goal = goal
         self.path = []
         self.currentPosition = currPos
         super(Car,self).__init__()
         self.subscribe("car")
-        allCars.append((self.id, self.goal, self.currentPosition))
     
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
@@ -64,9 +64,10 @@ class Car(MQTTClient):
         self.path = carMap[(self.currentPosition, self.goal)]
         next_move()
     #sends permission to all cars in the low list
-    def exit_critical(carId,lowlist):
-        for car in lowlist:
-            send_permission(carId, car)
+    def exit_critical():
+        for car in self.lowList:
+            send_permission(car)
+        
         #maybe have a messge that it has exited
     
     
