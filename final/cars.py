@@ -59,7 +59,7 @@ class Car(MQTTClient):
     def next_move():
         (direction, next) = self.path[0]
         self.path = self.path[1:]
-        self.publish("car", "move:" + str(self.id) + ":" + str(direction) + ":" + str(next) 
+        self.publish("car", "move:" + str(self.id) + ":" + str(direction) + ":" + str(next)) 
     
     def enter_critical():
         self.path = carMap[(self.currentPosition, self.goal)]
