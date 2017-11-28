@@ -15,12 +15,13 @@ from mapInit import carMap, colMap, pathCol
 #car needs a next step method
 class Car(MQTTClient):
     allCars = []
-    def __init__(self, number, path, currPos):
+    def __init__(self, number, goal, currPos):
         self.hiList = []
-        self.lowList = False
+        self.lowList = []
         self.id = number
         self.name = "car" + str(number)
-        self.goal = path
+        self.goal = goal
+        self.path = []
         self.currentPosition = currPos
         super(Car,self).__init__()
         self.subscribe("car")
@@ -33,40 +34,41 @@ class Car(MQTTClient):
         if message[0] == 'request':
             if pathCol((message[2],message[3]),(self.currentPosition, self.goal)):
                 if int(message[1]) > int(self.id):
-                    #send permission
-                    pass
+                    send_permission(message[1])
                 else:
                     #appending car id to lowlist to send it permission afer we go
                     self.lowList.append(message[1])
             else: 
-                #send permission
+                send_permission(message[1])
                 pass
-        elif message[0] == 'permission':
-            # check if it is the car being given permission
-            # remove from hilist
-            # if hilist is empty then move into critical zone
-            pass
-        elif message[0] == 'moved':
-            #maybe call like a goal(?) state 
-            # if it is goal 
-            pass
+        elif message[0] == 'permission' and message[2] == self.id:
+            self.hiList.remove(message[1])
+            if len(hiList) == 0:
+                enter_critical()
+        elif message[0] == 'moved' and message[1] == self.id:
+            if self.goal == message[2]:
+                exit_critical()
+            else:
+                next_move()
         else:
             print("not a valid message")
     # give permission to other cars
-    def send_permission(carFrom, carTo):
-        pass
+    def send_permission(carTo):
+        self.publish("car", "permission:" + str(self.id) + ":" + str(carTo))
     
-    #have it send messages saying it needs to move?
-    # possibly receive message saying to continue
-    # maybe this should be a bool and this should be movenextspot
-    # maybe this should queue the car
-    # call exit_critical when done
-    def enter_critical(carId, currentPos, goalPos):
-        pass
+    def next_move():
+        (direction, next) = self.path[0]
+        self.path = self.path[1:]
+        self.publish("car", "move:" + str(self.id) + ":" + str(direction) + ":" + str(next) 
+    
+    def enter_critical():
+        self.path = carMap[(self.currentPosition, self.goal)]
+        next_move()
     #sends permission to all cars in the low list
     def exit_critical(carId,lowlist):
         for car in lowlist:
             send_permission(carId, car)
+        #maybe have a messge that it has exited
     
     
 
