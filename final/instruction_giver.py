@@ -3,16 +3,15 @@ from mqtt_client import MQTTClient
 class Instruction(MQTTClient):
     def __init__(self):
         super(Instruction,self).__init__()
-        self.subscribe("move")
+        self.subscribe("car")
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
-        topic = msg.topic.split('/')[-1]
         msg_parts = msg.payload.split(':')
-        if topic == 'move':
-            msg_parts = msg.payload.split(':')
-            car, spot = msg_parts[0], msg_parts[1]
-            print("move " + car +" to spot " + spot)
+        if msg_parts[0] == 'move':
+            car, direction, spot = msg_parts[1], msg_parts[2], msg_parts[3]
+            print("move car" + car  + " " + direction + " to spot " + spot)
             raw_input("Press enter to continue")
+            self.publish("car", "moved:" + car + ":" + spot)
         return
 
 # at exit function

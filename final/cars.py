@@ -19,7 +19,6 @@ class Car(MQTTClient):
         self.hiList = []
         self.lowList = []
         self.id = number
-        self.name = "car" + str(number)
         self.goal = goal
         self.path = []
         self.currentPosition = currPos
