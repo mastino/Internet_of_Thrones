@@ -1,14 +1,9 @@
-import mraa, time, sys
 import sys
-import paho.mqtt.client as paho
 from mqtt_client import MQTTClient
-from threading import Thread
-from time import sleep
-
-# if you remove something from a hashtable in java it doesnt remove it from memory
+from mapInit import carMap, colMap, pathCol
 
 # initialize 
-# each car takes in an ID PATH
+# each car takes in an ID PATH and STARTINGPOS
 # hilist (start with everyone)
 # hilist -> permission with priority before them (higher id) paths conflict (need to hear back from)
 # if no conflict with path give permission
@@ -19,6 +14,7 @@ from time import sleep
 # that tell it when to move 
 #car needs a next step method
 class Car(MQTTClient):
+    allCars = []
     def __init__(self, number, path, currPos):
         self.hiList = []
         self.lowList = False
@@ -28,26 +24,54 @@ class Car(MQTTClient):
         self.currentPosition = currPos
         super(Car,self).__init__()
         self.subscribe("car")
+        allCars.append((self.id, self.goal, self.currentPosition))
     
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         message = msg.payload
         message = message.split(":")
         if message[0] == 'request':
-            if mqtt_client.hasPassengers == False:
-                mqtt_client.request()
-        elif message[0]=='pickup' and message[1] == mqtt_client.name:
-            mqtt_client.pickUp()
-            mqtt_client.ride()
-            myThread = Thread(target=timeFunc, args=(mqtt_client,4))
-            myThread.start()
+            if pathCol((message[2],message[3]),(self.currentPosition, self.goal)):
+                if int(message[1]) > int(self.id):
+                    #send permission
+                    pass
+                else:
+                    #appending car id to lowlist to send it permission afer we go
+                    self.lowList.append(message[1])
+            else: 
+                #send permission
+                pass
+        elif message[0] == 'permission':
+            # check if it is the car being given permission
+            # remove from hilist
+            # if hilist is empty then move into critical zone
+            pass
+        elif message[0] == 'moved':
+            #maybe call like a goal(?) state 
+            # if it is goal 
+            pass
         else:
-            print("not message")
+            print("not a valid message")
+    # give permission to other cars
+    def send_permission(carFrom, carTo):
+        pass
+    
+    #have it send messages saying it needs to move?
+    # possibly receive message saying to continue
+    # maybe this should be a bool and this should be movenextspot
+    # maybe this should queue the car
+    # call exit_critical when done
+    def enter_critical(carId, currentPos, goalPos):
+        pass
+    #sends permission to all cars in the low list
+    def exit_critical(carId,lowlist):
+        for car in lowlist:
+            send_permission(carId, car)
+    
+    
 
 #car platform and bcast 
-def timeFunc(car, num):
-    sleep(num)
-    car.dropOff()
+
 def createCars(num):
     cars = []
 

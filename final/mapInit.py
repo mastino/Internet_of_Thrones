@@ -47,3 +47,5 @@ colMap = {(L1, EX1):[(L1, EX2),(L4, EX1)],
 
 #think about later 
 def pathCol(path1, path2):
+    possibleCol = colMap.get(path1)
+    return path2 in possibleCol
