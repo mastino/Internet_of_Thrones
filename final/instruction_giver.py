@@ -7,7 +7,6 @@ class Instruction(MQTTClient):
     @staticmethod
     def on_message(client, userdata, msg, mqtt_client):
         msg_parts = msg.payload.split(':')
-        print "moving maybe"
         if msg_parts[0] == 'move':
             car, direction, spot = msg_parts[1], msg_parts[2], msg_parts[3]
             print("move car" + car  + " " + direction + " to spot " + spot)

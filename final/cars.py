@@ -16,14 +16,14 @@ from mapInit import carMap, colMap, pathCol
 # in conflict zone keep track of square and goal and then be able recieve messages
 # that tell it when to move 
 #car needs a next step method
-
+allCars = ["0","1","2","3"]
 class Car(MQTTClient):
-    allCars = ["0","1","2","3"]
+    global allCars
     def __init__(self, number, goal, currPos):
-        self.hiList = self.allCars[:]
+        self.hiList = allCars[:]
         self.lowList = []
         self.id = number
-        self.hiList = self.hiList.remove(str(self.id))
+        self.hiList.remove(str(self.id))
         self.goal = goal
         self.path = []
         self.currentPosition = currPos
@@ -49,17 +49,21 @@ class Car(MQTTClient):
                 pass
         elif message[0] == 'permission' and message[2] == str(mqtt_client.id):
             print "permission"
+            print mqtt_client.hiList
+            print message[1]
             mqtt_client.hiList.remove(message[1])
-            if len(hiList) == 0:
+            if len(mqtt_client.hiList) == 0:
                 mqtt_client.enter_critical()
         elif message[0] == 'moved' and message[1] == str(mqtt_client.id):
             print "moved"
-            if mqtt_client.goal == message[2]:
+            print mqtt_client.goal
+            print message[2]
+            if str(mqtt_client.goal) == message[2]:
                 mqtt_client.exit_critical()
             else:
                 mqtt_client.next_move()
         else:
-            print("not a valid message")
+            pass
     # give permission to other cars
     def send_permission(self, carTo):
         self.publish("car", "permission:" + str(self.id) + ":" + str(carTo))
@@ -71,11 +75,11 @@ class Car(MQTTClient):
     
     def enter_critical(self):
         self.path = carMap[(self.currentPosition, self.goal)]
-        next_move()
+        self.next_move()
     #sends permission to all cars in the low list
     def exit_critical(self):
         for car in self.lowList:
-            send_permission(car)
+            self.send_permission(car)
         #maybe have a messge that it has exited
 
     def ask_permission(self):
