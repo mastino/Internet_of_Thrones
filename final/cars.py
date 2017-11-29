@@ -2,6 +2,9 @@ import sys
 from mqtt_client import MQTTClient
 from mapInit import carMap, colMap, pathCol
 
+
+# what about lines to enter the path (??)
+
 # initialize 
 # each car takes in an ID PATH and STARTINGPOS
 # hilist (start with everyone)
@@ -13,6 +16,7 @@ from mapInit import carMap, colMap, pathCol
 # in conflict zone keep track of square and goal and then be able recieve messages
 # that tell it when to move 
 #car needs a next step method
+
 class Car(MQTTClient):
     allCars = ["0","1","2","3"]
     def __init__(self, number, goal, currPos):
@@ -31,7 +35,9 @@ class Car(MQTTClient):
         message = msg.payload
         message = message.split(":")
         if message[0] == 'request':
-            if pathCol((message[2],message[3]),(self.currentPosition, self.goal)):
+            if message[1] == self.id:
+                pass
+            elif pathCol((message[2],message[3]),(self.currentPosition, self.goal)):
                 if int(message[1]) > int(self.id):
                     send_permission(message[1])
                 else:
@@ -67,19 +73,10 @@ class Car(MQTTClient):
     def exit_critical():
         for car in self.lowList:
             send_permission(car)
-        
         #maybe have a messge that it has exited
-    
-    
 
-#car platform and bcast 
-
-def createCars(num):
-    cars = []
-
-    for i in range(num):
-        cars.append(Car(i))
-    return cars
+    def ask_permission():
+        self.publish("car", "request:" + self.id + ":" + self.currentPosition + ":" + self.goal) 
 
 while True:
     pass 
