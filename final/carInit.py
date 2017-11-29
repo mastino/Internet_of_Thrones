@@ -17,6 +17,9 @@ car2 = Car(2, 'EX2', 'L2')
 car3 = Car(2, 'EX3', 'L2')
 
 car0.ask_permission()
+car1.ask_permission()
+car2.ask_permission()
+car3.ask_permission()
 
 while True:
     pass
