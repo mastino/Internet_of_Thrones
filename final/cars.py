@@ -20,10 +20,10 @@ from mapInit import carMap, colMap, pathCol
 class Car(MQTTClient):
     allCars = ["0","1","2","3"]
     def __init__(self, number, goal, currPos):
-        self.hiList = allCars[:]
+        self.hiList = self.allCars[:]
         self.lowList = []
         self.id = number
-        self.hiList = self.hiList.remove(self.id)
+        self.hiList = self.hiList.remove(str(self.id))
         self.goal = goal
         self.path = []
         self.currentPosition = currPos
@@ -35,50 +35,51 @@ class Car(MQTTClient):
         message = msg.payload
         message = message.split(":")
         if message[0] == 'request':
-            if message[1] == self.id:
+            print "request"
+            if message[1] == str(mqtt_client.id):
                 pass
             elif pathCol((message[2],message[3]),(mqtt_client.currentPosition, mqtt_client.goal)):
                 if int(message[1]) > int(mqtt_client.id):
-                    send_permission(message[1])
+                    mqtt_client.send_permission(message[1])
                 else:
                     #appending car id to lowlist to send it permission afer we go
                     mqtt_client.lowList.append(message[1])
             else: 
-                send_permission(message[1])
+                mqtt_client.send_permission(message[1])
                 pass
-        elif message[0] == 'permission' and message[2] == mqtt_client.id:
+        elif message[0] == 'permission' and message[2] == str(mqtt_client.id):
+            print "permission"
             mqtt_client.hiList.remove(message[1])
             if len(hiList) == 0:
-                enter_critical()
-        elif message[0] == 'moved' and message[1] == mqtt_client.id:
+                mqtt_client.enter_critical()
+        elif message[0] == 'moved' and message[1] == str(mqtt_client.id):
+            print "moved"
             if mqtt_client.goal == message[2]:
-                exit_critical()
+                mqtt_client.exit_critical()
             else:
-                next_move()
+                mqtt_client.next_move()
         else:
             print("not a valid message")
     # give permission to other cars
-    def send_permission(carTo):
+    def send_permission(self, carTo):
         self.publish("car", "permission:" + str(self.id) + ":" + str(carTo))
     
-    def next_move():
+    def next_move(self):
         (direction, nextPos) = self.path[0]
         self.path = self.path[1:]
         self.publish("car", "move:" + str(self.id) + ":" + str(direction) + ":" + str(nextPos)) 
     
-    def enter_critical():
+    def enter_critical(self):
         self.path = carMap[(self.currentPosition, self.goal)]
         next_move()
     #sends permission to all cars in the low list
-    def exit_critical():
+    def exit_critical(self):
         for car in self.lowList:
             send_permission(car)
         #maybe have a messge that it has exited
 
-    def ask_permission():
-        self.publish("car", "request:" + self.id + ":" + self.currentPosition + ":" + self.goal) 
-
-while True:
-    pass 
+    def ask_permission(self):
+        self.publish("car", "request:" + str(self.id) + ":" + self.currentPosition + ":" + self.goal) 
+ 
 
 

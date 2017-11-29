@@ -11,8 +11,12 @@
 from cars import Car
 
 car0 = Car(0, 'EX2', 'L1')
+print "here"
 car1 = Car(1, 'EX1', 'L1')
 car2 = Car(2, 'EX2', 'L2')
 car3 = Car(2, 'EX3', 'L2')
 
-car0.
+car0.ask_permission()
+
+while True:
+    pass
