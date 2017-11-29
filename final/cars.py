@@ -37,21 +37,21 @@ class Car(MQTTClient):
         if message[0] == 'request':
             if message[1] == self.id:
                 pass
-            elif pathCol((message[2],message[3]),(self.currentPosition, self.goal)):
-                if int(message[1]) > int(self.id):
+            elif pathCol((message[2],message[3]),(mqtt_client.currentPosition, mqtt_client.goal)):
+                if int(message[1]) > int(mqtt_client.id):
                     send_permission(message[1])
                 else:
                     #appending car id to lowlist to send it permission afer we go
-                    self.lowList.append(message[1])
+                    mqtt_client.lowList.append(message[1])
             else: 
                 send_permission(message[1])
                 pass
-        elif message[0] == 'permission' and message[2] == self.id:
-            self.hiList.remove(message[1])
+        elif message[0] == 'permission' and message[2] == mqtt_client.id:
+            mqtt_client.hiList.remove(message[1])
             if len(hiList) == 0:
                 enter_critical()
-        elif message[0] == 'moved' and message[1] == self.id:
-            if self.goal == message[2]:
+        elif message[0] == 'moved' and message[1] == mqtt_client.id:
+            if mqtt_client.goal == message[2]:
                 exit_critical()
             else:
                 next_move()
