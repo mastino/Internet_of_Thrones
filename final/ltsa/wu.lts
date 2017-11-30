@@ -1,3 +1,13 @@
+/*
+LTSA for the final project
+
+Brian, Erin and Andy
+
+Team Internet of Thrones
+
+*/
+
+
 const False = 0
 const True = 1
 
@@ -50,10 +60,8 @@ BCAST(ID=1) = (
 SENDALL[a:1..2][b:2..3][c:3..4][l:Lanes][cnt:0..3] = (
 
 when (cnt > 0)  send_request[ID][a][l] -> SENDALL[a][b][c][l][cnt-1] |
-when (cnt > 0)  send_request[ID][b][l] -> SENDALL[a][b][c][l][cnt-1] |
-when (cnt > 0)  send_request[ID][c][l] -> SENDALL[a][b][c][l][cnt-1] |
 
-when(cnt == 0) dummy[ID] -> BCAST
+when (cnt == 0) restart[ID] -> BCAST
 
 ).
 
@@ -104,7 +112,7 @@ when (ID == 4) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][
 when (ID == 4) receive_permission[2][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 4) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
-when(!hl2 && !hl3 && !hl4) time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
+time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
 
 		),
 
@@ -210,7 +218,7 @@ when (ID == 4 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
 when (ID == 4 && ll3)  send_permission[ID][2] -> CLEANUP[ll2][False][ll4][l] |
 when (ID == 4 && ll4)  send_permission[ID][3] -> CLEANUP[ll2][ll3][False][l] |
 
-when(!ll2 && !ll3 && !ll4) restarting[ID] -> STARTUP
+when(!ll2 && !ll3 && !ll4) restart[ID] -> STARTUP
 
 		).
 
@@ -218,8 +226,9 @@ when(!ll2 && !ll3 && !ll4) restarting[ID] -> STARTUP
 ||VMEI = (WU_CAR(1) || WU_CAR(2) || WU_CAR(3) || WU_CAR(4) ||
 		  BCAST(1)  || BCAST(2)  || BCAST(3)  || BCAST(4))
 /{ send_request[a:Cars][b:Cars][c:Lanes]/receive_request[a][b][c],
-   send_permission[d:Cars][e:Cars]/receive_permission[d][e]
-}.
+   send_permission[d:Cars][e:Cars]/receive_permission[d][e]}
+>>{time_out[Cars], go_slow[Cars]}
+.
 
 
 
