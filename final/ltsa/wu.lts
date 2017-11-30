@@ -40,17 +40,34 @@ have concordance :)
 
 */
 
+BCAST(ID=1) = (
+	when (ID == 1) bcast[ID][l:Lanes] -> SENDALL[2][3][4][l][3] |
+	when (ID == 2) bcast[ID][l:Lanes] -> SENDALL[1][3][4][l][3] |
+	when (ID == 3) bcast[ID][l:Lanes] -> SENDALL[1][2][4][l][3] |
+	when (ID == 4) bcast[ID][l:Lanes] -> SENDALL[1][2][3][l][3]
+),
+
+SENDALL[a:1..2][b:2..3][c:3..4][l:Lanes][cnt:0..3] = (
+
+when (cnt > 0)  send_request[ID][a][l] -> SENDALL[a][b][c][l][cnt-1] |
+when (cnt > 0)  send_request[ID][b][l] -> SENDALL[a][b][c][l][cnt-1] |
+when (cnt > 0)  send_request[ID][c][l] -> SENDALL[a][b][c][l][cnt-1] |
+
+when(cnt == 0) dummy[ID] -> BCAST
+
+).
+
 WU_CAR(ID=1) = STARTUP,
 
 STARTUP = (choose_lane[ID][l:Lanes] -> CAR[0][0][0][0][0][0][l]), //HILIST and LOWLIST
 
 CAR[hl2:Bool][hl3:Bool][hl4:Bool][ll2:Bool][ll3:Bool][ll4:Bool][l:Lanes]
 			=(
-			when (ID == 1) send_request[ID][2][l] -> send_request[ID][3][l] -> send_request[ID][4][l] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][ll4][l] |
-			when (ID == 2) send_request[ID][1][l] -> send_request[ID][3][l] -> send_request[ID][4][l] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][ll4][l] |
-			when (ID == 3) send_request[ID][1][l] -> send_request[ID][2][l] -> send_request[ID][4][l] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][ll4][l] |
-			when (ID == 4) send_request[ID][1][l] -> send_request[ID][2][l] -> send_request[ID][3][l] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][ll4][l]
-			  ),
+			when (ID == 1) bcast[ID][l] -> WAIT_RESPONSE[True][True][True][ll2][ll3][ll4][l] |
+			when (ID == 2) bcast[ID][l] -> WAIT_RESPONSE[hl2][True][True][ll2][ll3][ll4][l] |
+			when (ID == 3) bcast[ID][l] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
+			when (ID == 4) bcast[ID][l] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][ll4][l]
+			),
 
 WAIT_RESPONSE[hl2:Bool][hl3:Bool][hl4:Bool][ll2:Bool][ll3:Bool][ll4:Bool][l:Lanes] = (
 /* original
@@ -72,16 +89,22 @@ when (ID == 1) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][
 when (ID == 1) receive_request[4][ID][Lanes] -> send_permission[ID][4] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
 when (ID == 1) receive_permission[4][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+when (ID == 2) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][ll3][ll4][l] |
 when (ID == 2) receive_request[3][ID][Lanes] -> send_permission[ID][3] -> WAIT_RESPONSE[hl2][True][hl4][ll2][ll3][ll4][l] |
 when (ID == 2) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 2) receive_request[4][ID][Lanes] -> send_permission[ID][4] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
 when (ID == 2) receive_permission[4][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+when (ID == 3) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][ll3][ll4][l] |
+when (ID == 3) receive_permission[2][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 3) receive_request[4][ID][Lanes] -> send_permission[ID][4] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
 when (ID == 3) receive_permission[4][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
-time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
+when (ID == 4) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][ll3][ll4][l] |
+when (ID == 4) receive_permission[2][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
+when (ID == 4) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+when(!hl2 && !hl3 && !hl4) time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
 
 		),
 
@@ -104,10 +127,17 @@ when (ID == 1 && hl2)  receive_permission[2][ID] -> WAIT_PERMISSION[False][hl3][
 when (ID == 1 && hl3)  receive_permission[3][ID] -> WAIT_PERMISSION[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 1 && hl4)  receive_permission[4][ID] -> WAIT_PERMISSION[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+when (ID == 2 && hl2)  receive_permission[1][ID] -> WAIT_PERMISSION[False][hl3][hl4][ll2][ll3][ll4][l] |
 when (ID == 2 && hl3)  receive_permission[3][ID] -> WAIT_PERMISSION[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 2 && hl4)  receive_permission[4][ID] -> WAIT_PERMISSION[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+when (ID == 3 && hl2)  receive_permission[1][ID] -> WAIT_PERMISSION[False][hl3][hl4][ll2][ll3][ll4][l] |
+when (ID == 3 && hl3)  receive_permission[2][ID] -> WAIT_PERMISSION[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 3 && hl4)  receive_permission[4][ID] -> WAIT_PERMISSION[hl2][hl3][False][ll2][ll3][ll4][l] |
+
+when (ID == 4 && hl2)  receive_permission[1][ID] -> WAIT_PERMISSION[False][hl3][hl4][ll2][ll3][ll4][l] |
+when (ID == 4 && hl3)  receive_permission[2][ID] -> WAIT_PERMISSION[hl2][False][hl4][ll2][ll3][ll4][l] |
+when (ID == 4 && hl4)  receive_permission[3][ID] -> WAIT_PERMISSION[hl2][hl3][False][ll2][ll3][ll4][l] |
 
 when (ID == 1)  receive_request[2][ID][Lanes] -> WAIT_PERMISSION[hl2][hl3][hl4][True][ll3][ll4] |
 when (ID == 1)  receive_request[3][ID][Lanes] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][True][ll4] |
@@ -150,8 +180,8 @@ when (ID != 3)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
 when (ID != 3)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
 when (ID != 3)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
-exit[1] -> CLEANUP[ll2][ll3][ll4][l] |
-go_slow[1] -> CRITICAL[ll2][ll3][ll4][l]
+exit[ID] -> CLEANUP[ll2][ll3][ll4][l] |
+go_slow[ID] -> CRITICAL[ll2][ll3][ll4][l]
 
 		),
 
@@ -163,26 +193,38 @@ CLEANUP[ll2:Bool][ll3:Bool][ll4:Bool][l:Lanes] = (
 			when(ll4) send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l]
 */
 
-when (ID != 1 && ll2)  send_permission[ID][2] -> CLEANUP[False][ll3][ll4][l] |
-when (ID != 1 && ll3)  send_permission[ID][3] -> CLEANUP[ll2][False][ll4][l] |
-when (ID != 1 && ll4)  send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l] |
 
-when (ID != 2 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
-when (ID != 2 && ll3)  send_permission[ID][3] -> CLEANUP[ll2][False][ll4][l] |
-when (ID != 2 && ll4)  send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l] |
+when (ID == 1 && ll2)  send_permission[ID][2] -> CLEANUP[False][ll3][ll4][l] |
+when (ID == 1 && ll3)  send_permission[ID][3] -> CLEANUP[ll2][False][ll4][l] |
+when (ID == 1 && ll4)  send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l] |
 
-when (ID != 3 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
-when (ID != 3 && ll3)  send_permission[ID][2] -> CLEANUP[ll2][False][ll4][l] |
-when (ID != 3 && ll4)  send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l] |
+when (ID == 2 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
+when (ID == 2 && ll3)  send_permission[ID][3] -> CLEANUP[ll2][False][ll4][l] |
+when (ID == 2 && ll4)  send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l] |
+
+when (ID == 3 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
+when (ID == 3 && ll3)  send_permission[ID][2] -> CLEANUP[ll2][False][ll4][l] |
+when (ID == 3 && ll4)  send_permission[ID][4] -> CLEANUP[ll2][ll3][False][l] |
+
+when (ID == 4 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
+when (ID == 4 && ll3)  send_permission[ID][2] -> CLEANUP[ll2][False][ll4][l] |
+when (ID == 4 && ll4)  send_permission[ID][3] -> CLEANUP[ll2][ll3][False][l] |
 
 when(!ll2 && !ll3 && !ll4) restarting[ID] -> STARTUP
 
 		).
 
 
-||VMEI = (WU_CAR(1) || WU_CAR(2) || WU_CAR(3) || WU_CAR(4)). // << enter[4] could lock others out
+||VMEI = (WU_CAR(1) || WU_CAR(2) || WU_CAR(3) || WU_CAR(4) ||
+		  BCAST(1)  || BCAST(2)  || BCAST(3)  || BCAST(4))
+/{ send_request[a:Cars][b:Cars][c:Lanes]/receive_request[a][b][c],
+   send_permission[d:Cars][e:Cars]/receive_permission[d][e]
+}.
 
-assert MOVE_THROUGH = []<>exit[Cars]  //car 1 could get locked out
+
+
+assert MOVE_THROUGH = []<>exit[Cars]
+assert PROGRESS     = []<>enter[Cars]
 
 fluent CS[i:Cars] = <enter[i], exit[i]>
 
