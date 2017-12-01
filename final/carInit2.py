@@ -12,9 +12,9 @@ from cars import Car
 import time
 
 car0 = Car(0, 'EX2', 'L1')
-car1 = Car(1, 'EX1', 'L1')
-car2 = Car(2, 'EX2', 'L2')
-car3 = Car(3, 'EX3', 'L2')
+car1 = Car(1, 'EX4', 'L3')
+car2 = Car(2, 'EX3', 'L2')
+car3 = Car(3, 'EX1', 'L4')
 
 time.sleep(2)  # wait for the cars to get initialized
 
