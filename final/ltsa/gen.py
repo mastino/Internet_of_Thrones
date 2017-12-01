@@ -8,7 +8,7 @@ MAX_CARS = 4
 file = open("testfile.txt","w")
 
 
-file.write("wait response")
+file.write("wait response do not use!!")
 file.write("\n")
 file.write("\n")
 file.write("\n")
@@ -36,7 +36,7 @@ for i in range(1,MAX_CARS+1):
             file.write(lower_priority1.format(j, low_list[cnt1].format("False"), when_str))
             cnt1+=1
 
-file.write("\ntime_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]")
+file.write("\nwhen(!hl2 && !hl3 && !hl4) time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]")
 
 file.write("\n")
 file.write("\n")
@@ -92,17 +92,17 @@ lower_priority = \
 
 low_list2 = ["", "[{}][ll3][ll4]","[ll2][{}][ll4]","[ll2][ll3][{}]"]
 
-for i in range(1,MAX_CARS):
+for i in range(1,MAX_CARS+1):
     file.write("\n")
     cnt = 1
-    when_str = "when (ID != {}) ".format(i)
+    when_str = "when (ID == {}) ".format(i)
     for j in range(1,MAX_CARS+1):
         if i != j:
             file.write(lower_priority.format(j, low_list2[cnt].format("True"),  when_str))
             cnt+=1
 
-file.write("""\nexit[1] -> CLEANUP[ll2][ll3][ll4][l] |
-go_slow[1] -> CRITICAL[ll2][ll3][ll4][l]""")
+file.write("""\nexit[ID] -> CLEANUP[ll2][ll3][ll4][l] |
+go_slow[ID] -> CRITICAL[ll2][ll3][ll4][l]""")
 
 
 file.write("\n")

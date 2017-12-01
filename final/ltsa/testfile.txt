@@ -24,7 +24,7 @@ when (ID == 4) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][
 when (ID == 4) receive_permission[2][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 4) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
-time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
+when(!hl2 && !hl3 && !hl4) time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
 
 
 wait permission
@@ -63,17 +63,21 @@ critical
 
 
 
-when (ID != 1)  receive_request[2][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
-when (ID != 1)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
-when (ID != 1)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+when (ID == 1)  receive_request[2][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 1)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 1)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
-when (ID != 2)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
-when (ID != 2)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
-when (ID != 2)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+when (ID == 2)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 2)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 2)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
-when (ID != 3)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
-when (ID != 3)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
-when (ID != 3)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+when (ID == 3)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 3)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 3)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+
+when (ID == 4)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 4)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 4)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
 exit[1] -> CLEANUP[ll2][ll3][ll4][l] |
 go_slow[1] -> CRITICAL[ll2][ll3][ll4][l]

@@ -59,9 +59,11 @@ BCAST(ID=1) = (
 
 SENDALL[a:1..2][b:2..3][c:3..4][l:Lanes][cnt:0..3] = (
 
-when (cnt > 0)  send_request[ID][a][l] -> SENDALL[a][b][c][l][cnt-1] |
+when (cnt == 3)  send_request[ID][a][l] -> SENDALL[a][b][c][l][cnt-1] |
+when (cnt == 2)  send_request[ID][b][l] -> SENDALL[a][b][c][l][cnt-1] |
+when (cnt == 1)  send_request[ID][c][l] -> SENDALL[a][b][c][l][cnt-1] |
 
-when (cnt == 0) restart[ID] -> BCAST
+when (cnt == 0) restart -> BCAST
 
 ).
 
@@ -72,9 +74,9 @@ STARTUP = (choose_lane[ID][l:Lanes] -> CAR[0][0][0][0][0][0][l]), //HILIST and L
 CAR[hl2:Bool][hl3:Bool][hl4:Bool][ll2:Bool][ll3:Bool][ll4:Bool][l:Lanes]
 			=(
 			when (ID == 1) bcast[ID][l] -> WAIT_RESPONSE[True][True][True][ll2][ll3][ll4][l] |
-			when (ID == 2) bcast[ID][l] -> WAIT_RESPONSE[hl2][True][True][ll2][ll3][ll4][l] |
-			when (ID == 3) bcast[ID][l] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
-			when (ID == 4) bcast[ID][l] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][ll4][l]
+			when (ID == 2) bcast[ID][l] -> WAIT_RESPONSE[True][True][True][ll2][ll3][ll4][l] |
+			when (ID == 3) bcast[ID][l] -> WAIT_RESPONSE[True][True][True][ll2][ll3][ll4][l] |
+			when (ID == 4) bcast[ID][l] -> WAIT_RESPONSE[True][True][True][ll2][ll3][ll4][l]
 			),
 
 WAIT_RESPONSE[hl2:Bool][hl3:Bool][hl4:Bool][ll2:Bool][ll3:Bool][ll4:Bool][l:Lanes] = (
@@ -97,19 +99,27 @@ when (ID == 1) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][
 when (ID == 1) receive_request[4][ID][Lanes] -> send_permission[ID][4] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
 when (ID == 1) receive_permission[4][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+
+when (ID == 2) receive_request[1][ID][Lanes] -> WAIT_RESPONSE[hl2][hl3][hl4][True][ll3][ll4][l] |
 when (ID == 2) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][ll3][ll4][l] |
 when (ID == 2) receive_request[3][ID][Lanes] -> send_permission[ID][3] -> WAIT_RESPONSE[hl2][True][hl4][ll2][ll3][ll4][l] |
 when (ID == 2) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 2) receive_request[4][ID][Lanes] -> send_permission[ID][4] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
 when (ID == 2) receive_permission[4][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+
+when (ID == 3) receive_request[1][ID][Lanes] -> WAIT_RESPONSE[hl2][hl3][hl4][True][ll3][ll4][l] |
 when (ID == 3) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][ll3][ll4][l] |
+when (ID == 3) receive_request[2][ID][Lanes] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][True][ll4][l] |
 when (ID == 3) receive_permission[2][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
 when (ID == 3) receive_request[4][ID][Lanes] -> send_permission[ID][4] -> WAIT_RESPONSE[hl2][hl3][True][ll2][ll3][ll4][l] |
 when (ID == 3) receive_permission[4][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
+when (ID == 4) receive_request[1][ID][Lanes] -> WAIT_RESPONSE[hl2][hl3][hl4][True][ll3][ll4][l] |
 when (ID == 4) receive_permission[1][ID] -> WAIT_RESPONSE[False][hl3][hl4][ll2][ll3][ll4][l] |
+when (ID == 4) receive_request[2][ID][Lanes] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][True][ll4][l] |
 when (ID == 4) receive_permission[2][ID] -> WAIT_RESPONSE[hl2][False][hl4][ll2][ll3][ll4][l] |
+when (ID == 4) receive_request[3][ID][Lanes] -> WAIT_RESPONSE[hl2][hl3][hl4][ll2][ll3][True][l] |
 when (ID == 4) receive_permission[3][ID] -> WAIT_RESPONSE[hl2][hl3][False][ll2][ll3][ll4][l] |
 
 time_out[ID] -> WAIT_PERMISSION[hl2][hl3][hl4][ll2][ll3][ll4][l]
@@ -176,17 +186,22 @@ CRITICAL[ll2:Bool][ll3:Bool][ll4:Bool][l:Lanes] = (
 
 */
 
-when (ID != 1)  receive_request[2][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
-when (ID != 1)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
-when (ID != 1)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
-when (ID != 2)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
-when (ID != 2)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
-when (ID != 2)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+when (ID == 1)  receive_request[2][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 1)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 1)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
-when (ID != 3)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
-when (ID != 3)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
-when (ID != 3)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+when (ID == 2)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 2)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 2)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+
+when (ID == 3)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 3)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 3)  receive_request[4][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
+
+when (ID == 4)  receive_request[1][ID][Lanes] -> CRITICAL[True][ll3][ll4][l] |
+when (ID == 4)  receive_request[2][ID][Lanes] -> CRITICAL[ll2][True][ll4][l] |
+when (ID == 4)  receive_request[3][ID][Lanes] -> CRITICAL[ll2][ll3][True][l] |
 
 exit[ID] -> CLEANUP[ll2][ll3][ll4][l] |
 go_slow[ID] -> CRITICAL[ll2][ll3][ll4][l]
@@ -218,7 +233,7 @@ when (ID == 4 && ll2)  send_permission[ID][1] -> CLEANUP[False][ll3][ll4][l] |
 when (ID == 4 && ll3)  send_permission[ID][2] -> CLEANUP[ll2][False][ll4][l] |
 when (ID == 4 && ll4)  send_permission[ID][3] -> CLEANUP[ll2][ll3][False][l] |
 
-when(!ll2 && !ll3 && !ll4) restart[ID] -> STARTUP
+when(!ll2 && !ll3 && !ll4) restart -> STARTUP
 
 		).
 
@@ -227,8 +242,8 @@ const Total = 4
 MSGCOUNTER = COUNTER[0][0],
 
 COUNTER[i:0..Total][j:0..Total] = (
-		when(i+1<j) enter[ID] -> maxj   -> COUNTER[i+1][j] |
-		when(i+1>j) enter[ID] -> new_maxj -> COUNTER[i+1][i+1] |
+		when(i+1<j) enter[ID] -> count.i.j   -> COUNTER[i+1][j] |
+		when(i+1>j) enter[ID] -> count.i.j -> COUNTER[i+1][i+1] |
 		exit[ID]  -> COUNTER[i-1]
 ).
 
