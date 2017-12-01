@@ -242,14 +242,23 @@ const Total = 4
 MSGCOUNTER = COUNTER[0][0],
 
 COUNTER[i:0..Total][j:0..Total] = (
-		when(i+1<j) enter[ID] -> count.i.j   -> COUNTER[i+1][j] |
-		when(i+1>j) enter[ID] -> count.i.j -> COUNTER[i+1][i+1] |
-		exit[ID]  -> COUNTER[i-1]
+		when(i+1<j) enter[Cars] -> count[i][j] -> COUNTER[i+1][j] |
+		when(i+1>j) enter[Cars] -> count[i][j] -> COUNTER[i+1][i+1] |
+		exit[Cars]  -> COUNTER[i-1][j]
 ).
 
 
 ||VMEI = (WU_CAR(1) || WU_CAR(2) || WU_CAR(3) || WU_CAR(4) ||
 		  BCAST(1)  || BCAST(2)  || BCAST(3)  || BCAST(4))
+/{ send_request[a:Cars][b:Cars][c:Lanes]/receive_request[a][b][c],
+   send_permission[d:Cars][e:Cars]/receive_permission[d][e]}
+>>{time_out[Cars], go_slow[Cars]}
+.
+
+
+||VMEI_EFF = (WU_CAR(1) || WU_CAR(2) || WU_CAR(3) || WU_CAR(4) ||
+		  BCAST(1)  || BCAST(2)  || BCAST(3)  || BCAST(4)  ||
+		  MSGCOUNTER)
 /{ send_request[a:Cars][b:Cars][c:Lanes]/receive_request[a][b][c],
    send_permission[d:Cars][e:Cars]/receive_permission[d][e]}
 >>{time_out[Cars], go_slow[Cars]}
